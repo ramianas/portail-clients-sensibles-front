@@ -1,0 +1,114 @@
+<div class="table-header-section">
+  <h2 style="margin: 0; font-weight: 600;">Base des Personnes Morales Suspectes</h2>
+  <button class="btn-primary" (click)="isEditing = true">Nouvelle PM</button>
+</div>
+
+@if (pmPage$ | async; as page) {
+  <div class="content-card">
+    <table>
+      <thead>
+        <tr>
+          <th>Réf. ↕</th>
+          <th>Raison Sociale ↕</th>
+          <th>Date Création ↕</th>
+          <th>Pays ↕</th>
+          <th>Objet d'une DS ↕</th>
+          <th>Entité ↕</th>
+          <th>Créé par ↕</th>
+          <th>Modifié le ↕</th>
+          <th style="text-align: center;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (pm of page.content; track pm.id) {
+          <tr>
+            <td style="font-weight: 600;">#{{pm.id}}</td>
+            <td style="text-transform: uppercase; font-weight: 500;">{{pm.raisonSociale}}</td>
+            <td>{{(pm.dateDeCreationDuClient | date:'dd/MM/yyyy') || 'N/A'}}</td>
+            <td><span class="badge badge-entity">{{pm.pays || 'N/A'}}</span></td>
+            <td>
+              <span class="badge" [style.background]="pm.clientObjetDUneDs ? '#fff3e0' : '#e8f5e9'" [style.color]="pm.clientObjetDUneDs ? '#ef6c00' : '#2e7d32'">
+                {{pm.clientObjetDUneDs ? 'OUI' : 'NON'}}
+              </span>
+            </td>
+            <td>{{pm.entite || 'N/A'}}</td>
+            <td style="font-size: 0.8rem;">{{pm.creePar}}</td>
+            <td>{{pm.dateDeDernierModif | date:'dd/MM/yyyy HH:mm'}}</td>
+            <td style="text-align: center;">
+              <div style="display: flex; justify-content: center; gap: 10px;">
+                <button style="border: none; background: none; color: #0057b8; cursor: pointer; font-size: 1.1rem;" (click)="editerPm(pm)">✏️</button>
+                <button style="border: none; background: none; color: #dc3545; cursor: pointer; font-size: 1.1rem;" (click)="supprimerPm(pm.id)">🗑️</button>
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="9" style="text-align: center; padding: 20px;">Aucune entité trouvée.</td></tr>
+        }
+      </tbody>
+    </table>
+
+    <div style="padding: 15px 30px; display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--boa-border);">
+      <button class="btn-primary" style="background: white; color: var(--boa-text); border: 1px solid var(--boa-border);"
+              (click)="pagePrecedente()" [disabled]="currentPage === 0">Précédent</button>
+      <span style="align-self: center; font-size: 0.9rem;">Page {{currentPage + 1}} sur {{page.totalPages}}</span>
+      <button class="btn-primary" style="background: white; color: var(--boa-text); border: 1px solid var(--boa-border);"
+              (click)="pageSuivante(page.totalPages)" [disabled]="currentPage === page.totalPages - 1">Suivant</button>
+    </div>
+  </div>
+} @else {
+  <div style="padding: 40px; text-align: center; color: var(--boa-text-secondary);">Chargement en cours...</div>
+}
+
+@if (isEditing) {
+  <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+    <div class="content-card" style="width: 700px; padding: 30px; margin: 0; max-height: 90vh; overflow-y: auto;">
+      <h3 style="margin-top: 0; border-bottom: 2px solid var(--boa-blue); padding-bottom: 10px;">
+        {{currentPm.id ? 'Modifier' : 'Nouvelle'}} Personne Morale Suspecte
+      </h3>
+      <form (ngSubmit)="enregistrerPm()">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; font-size: 0.8rem; margin-bottom: 5px; font-weight: 600;">Raison Sociale</label>
+            <input type="text" [(ngModel)]="currentPm.raisonSociale" name="raisonSociale" required style="width: 100%; padding: 10px; border: 1px solid var(--boa-border); border-radius: 4px;">
+          </div>
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; font-size: 0.8rem; margin-bottom: 5px; font-weight: 600;">Pays </label>
+            <select [(ngModel)]="currentPm.pays" name="pays" required style="width: 100%; padding: 10px; border: 1px solid var(--boa-border); border-radius: 4px; background: white;">
+              <option value="">Sélectionnez un pays</option>
+              @for (c of countries; track c.code) {
+                <option [value]="c.code + ' - ' + c.name">{{c.code}} - {{c.name}}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; font-size: 0.8rem; margin-bottom: 5px; font-weight: 600;">Date de création du client</label>
+          <input type="date" [(ngModel)]="currentPm.dateDeCreationDuClient" name="dateCreation" style="width: 100%; padding: 10px; border: 1px solid var(--boa-border); border-radius: 4px;">
+        </div>
+
+        <div style="margin-bottom: 15px;">
+          <label style="display: flex; align-items: center; gap: 10px; font-size: 0.9rem; font-weight: 600; cursor: pointer;">
+            <input type="checkbox" [(ngModel)]="currentPm.clientObjetDUneDs" name="ds" style="width: 18px; height: 18px;">
+            Le client est l'objet d'une DS (Déclaration de Soupçon)
+          </label>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; font-size: 0.8rem; margin-bottom: 5px; font-weight: 600;">Motif</label>
+          <textarea [(ngModel)]="currentPm.motif" name="motif" rows="2" style="width: 100%; padding: 10px; border: 1px solid var(--boa-border); border-radius: 4px;" placeholder="Motif de la suspicion..."></textarea>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; font-size: 0.8rem; margin-bottom: 5px; font-weight: 600;">Commentaire</label>
+          <textarea [(ngModel)]="currentPm.commentaire" name="commentaire" rows="2" style="width: 100%; padding: 10px; border: 1px solid var(--boa-border); border-radius: 4px;" placeholder="Commentaires additionnels..."></textarea>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 15px; margin-top: 30px;">
+          <button type="button" (click)="annulerEdition()" style="background: none; border: 1px solid #ccc; padding: 10px 25px; border-radius: 4px; cursor: pointer;">Annuler</button>
+          <button type="submit" class="btn-primary" style="padding: 10px 25px;">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

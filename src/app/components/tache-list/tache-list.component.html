@@ -1,0 +1,153 @@
+<div class="table-header-section">
+    <h2 style="margin: 0; font-weight: 600;">File d'attente des validations</h2>
+    <button class="btn-primary" (click)="chargerTaches()">Actualiser</button>
+  </div>
+
+  <div class="content-card">
+    @if (taches$ | async; as taches) {
+      @if (taches.length > 0) {
+        <table>
+          <thead>
+            <tr>
+              <th>Réf. Tâche ↕</th>
+              <th>Type Action ↕</th>
+              <th>Entité Client ↕</th>
+              <th>Nom du Client ↕</th>
+              <th>Pays ↕</th>
+              <th>Date de demande ↕</th>
+              <th>Créateur ↕</th>
+              <th style="text-align: center;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (tache of taches; track tache.id) {
+              <tr>
+                <td style="font-weight: 600;">#{{tache.id}}</td>
+                <td>
+                  <span class="badge" [ngClass]="{
+                      'badge-pbf': tache.typeAction === 'ATTENTE_CREATION',
+                      'badge-pending': tache.typeAction === 'ATTENTE_MODIFICATION',
+                      'badge-suspicious': tache.typeAction === 'ATTENTE_SUPPRESSION'
+                    }">
+                    {{getLabelAction(tache.typeAction)}}
+                  </span>
+                </td>
+                <td>
+                  <span class="badge badge-entity">{{tache.typeEntiteClient}}</span>
+                </td>
+                <td style="text-transform: uppercase; font-weight: 500;">{{tache.nom || tache.raisonSociale}}</td>
+                <td>{{tache.pays}}</td>
+                <td>{{tache.dateCreation | date:'dd/MM/yyyy HH:mm'}}</td>
+                <td style="font-size: 0.8rem;">{{tache.createurEmail}}</td>
+                <td style="text-align: center;">
+                  <button class="btn-primary" style="background: #0057b8; padding: 5px 15px; font-size: 0.8rem;"
+                          (click)="ouvrirDecision(tache)">
+                    DÉCIDER
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else {
+        <div style="padding: 40px; text-align: center; color: var(--boa-text-secondary);">
+          Aucune tâche en attente de validation.
+        </div>
+      }
+    } @else {
+      <div style="padding: 40px; text-align: center; color: var(--boa-text-secondary);">
+        Chargement des tâches en cours...
+      </div>
+    }
+  </div>
+
+  <!-- MODALE DE DÉCISION (VALIDER / REJETER) -->
+  @if (tacheSelectionnee) {
+    <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(2px);">
+      <div class="content-card" style="width: 700px; padding: 0; margin: 0; border-radius: 12px; border: 1px solid var(--boa-border);">
+
+        <!-- Header Modale -->
+        <div style="padding: 20px 30px; border-bottom: 1px solid var(--boa-border); display: flex; justify-content: space-between; align-items: center; background: #f8f9fa;">
+          <h3 style="margin: 0; font-size: 1.1rem; color: var(--boa-navy);">Décision sur la tâche #{{tacheSelectionnee.id}}</h3>
+          <button (click)="fermerDecision()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #999;">&times;</button>
+        </div>
+
+        <!-- Contenu Modale -->
+        <div style="padding: 30px; max-height: 70vh; overflow-y: auto;">
+          <div style="background: #f1f5f9; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
+            <h4 style="margin-top: 0; margin-bottom: 15px; color: var(--boa-navy); border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
+              Informations sur la demande ({{getLabelAction(tacheSelectionnee.typeAction)}})
+            </h4>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 0.9rem;">
+
+              <!-- Champs communs -->
+              <div><span style="color: #64748b;">Type d'entité :</span> <strong>{{tacheSelectionnee.typeEntiteClient}}</strong></div>
+              <div><span style="color: #64748b;">Demandé par :</span> <strong>{{tacheSelectionnee.createurEmail}}</strong></div>
+              <div><span style="color: #64748b;">Date demande :</span> <strong>{{tacheSelectionnee.dateCreation | date:'dd/MM/yyyy HH:mm'}}</strong></div>
+              <div><span style="color: #64748b;">Entité source :</span> <strong>{{tacheSelectionnee.entite || 'N/A'}}</strong></div>
+
+              <!-- Spécifique PPE ou PP -->
+              @if (tacheSelectionnee.typeEntiteClient === 'PPE' || tacheSelectionnee.typeEntiteClient === 'SUSPECT_PP') {
+                <div><span style="color: #64748b;">Nom :</span> <strong style="text-transform: uppercase;">{{tacheSelectionnee.nom}}</strong></div>
+                <div><span style="color: #64748b;">Prénom :</span> <strong>{{tacheSelectionnee.prenom}}</strong></div>
+                <div><span style="color: #64748b;"> Pays :</span> <strong>{{tacheSelectionnee.pays}}</strong></div>
+
+                @if (tacheSelectionnee.typeEntiteClient === 'PPE') {
+                  <div><span style="color: #64748b;">Fonction :</span> <strong>{{tacheSelectionnee.fonction}}</strong></div>
+                }
+                @if (tacheSelectionnee.typeEntiteClient === 'SUSPECT_PP') {
+                  <div><span style="color: #64748b;">Date de naissance :</span> <strong>{{tacheSelectionnee.dateNaissance}}</strong></div>
+                  <div><span style="color: #64748b;">Objet d'une DS :</span> <strong>{{tacheSelectionnee.clientObjetDUneDs ? 'OUI' : 'NON'}}</strong></div>
+                }
+              }
+
+              <!-- Spécifique PM -->
+              @if (tacheSelectionnee.typeEntiteClient === 'SUSPECT_PM') {
+                <div style="grid-column: span 2;"><span style="color: #64748b;">Raison Sociale :</span> <strong style="text-transform: uppercase;">{{tacheSelectionnee.raisonSociale}}</strong></div>
+                <div><span style="color: #64748b;">Date Création Client :</span> <strong>{{tacheSelectionnee.dateDeCreationDuClient | date:'dd/MM/yyyy'}}</strong></div>
+                <div><span style="color: #64748b;">Pays :</span> <strong>{{tacheSelectionnee.pays}}</strong></div>
+                <div><span style="color: #64748b;">Objet d'une DS :</span> <strong>{{tacheSelectionnee.clientObjetDUneDs ? 'OUI' : 'NON'}}</strong></div>
+              }
+            </div>
+
+            <!-- Motifs et Commentaires -->
+            <div style="margin-top: 20px; border-top: 1px solid #e2e8f0; padding-top: 15px;">
+                <div style="margin-bottom: 10px;">
+                    <span style="color: #64748b; font-size: 0.85rem; display: block; margin-bottom: 4px;">Motif de la demande :</span>
+                    <div style="font-size: 0.9rem; background: white; padding: 10px; border-radius: 4px; border: 1px solid #e2e8f0;">
+                        {{tacheSelectionnee.motif || tacheSelectionnee.description}}
+                    </div>
+                </div>
+                @if (tacheSelectionnee.commentaire) {
+                    <div>
+                        <span style="color: #64748b; font-size: 0.85rem; display: block; margin-bottom: 4px;">Commentaire additionnel :</span>
+                        <div style="font-size: 0.9rem; background: white; padding: 10px; border-radius: 4px; border: 1px solid #e2e8f0;">
+                            {{tacheSelectionnee.commentaire}}
+                        </div>
+                    </div>
+                }
+            </div>
+          </div>
+
+          <div style="margin-bottom: 25px;">
+            <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; color: #475569;">
+              Motif du rejet (obligatoire en cas de rejet)
+            </label>
+            <textarea [(ngModel)]="commentaireRejet" placeholder="Saisissez ici la raison pour laquelle vous rejetez cette demande..."
+                      style="width: 100%; height: 100px; padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit; font-size: 0.9rem;"></textarea>
+          </div>
+
+          <!-- Footer Actions Modale -->
+          <div style="display: flex; gap: 15px;">
+              <button class="btn-primary" style="flex: 1; background: #28a745; padding: 12px; border: none;" (click)="confirmerValidation()">
+                ✔️ ACCEPTER LA DEMANDE
+              </button>
+              <button class="btn-primary" style="flex: 1; background: #dc3545; padding: 12px; border: none;" (click)="confirmerRejet()">
+                ❌ REJETER
+              </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }

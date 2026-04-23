@@ -1,0 +1,130 @@
+<div class="table-header-section">
+  <h2 style="margin: 0; font-weight: 600;">Base des Clients PPE Approuvés</h2>
+  <button class="btn-primary" (click)="isEditing = true">Nouveau PPE</button>
+</div>
+
+@if (ppePage$ | async; as page) {
+  <div class="content-card">
+    <table>
+      <thead>
+        <tr>
+          <th>Réf. Client ↕</th>
+          <th>Profil Client ↕</th>
+          <th>Nom ↕</th>
+          <th>Prénom ↕</th>
+          <th>Statut ↕</th>
+          <th>Date de modification ↕</th>
+          <th>Créé par ↕</th>
+          <th>Entité ↕</th>
+          <th style="text-align: center;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (ppe of page.content; track ppe.id) {
+          <tr>
+            <td style="font-weight: 600;">#{{ppe.id}}</td>
+            <td>
+              <span class="badge badge-pbf">PPE Approuvé</span>
+            </td>
+            <td style="text-transform: uppercase; font-weight: 500;">{{ppe.nom}}</td>
+            <td>{{ppe.prenom}}</td>
+            <td>
+              <span class="badge" style="background: #e8f5e9; color: #2e7d32;">ACTIF</span>
+            </td>
+            <td>{{(ppe.dateDeDernierModif | date:'dd MMM yyyy') || 'N/A'}}</td>
+            <td style="font-size: 0.8rem;">{{ppe.creePar}}</td>
+            <td>
+              <span class="badge badge-entity">{{ppe.entite || 'N/A'}}</span>
+            </td>
+            <td style="text-align: center;">
+              <div style="display: flex; justify-content: center; gap: 10px;">
+                <button style="border: none; background: none; color: #0057b8; cursor: pointer; font-size: 1.1rem;" title="Modifier" (click)="editerPpe(ppe)">
+                  ✏️
+                </button>
+                <button style="border: none; background: none; color: #dc3545; cursor: pointer; font-size: 1.1rem;" title="Supprimer" (click)="supprimerPpe(ppe.id)">
+                  🗑️
+                </button>
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="9" style="text-align: center; padding: 20px;">Aucun client PPE trouvé.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    <!-- Pagination -->
+    <div style="padding: 15px 30px; display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--boa-border);">
+      <button class="btn-primary" style="background: white; color: var(--boa-text); border: 1px solid var(--boa-border);"
+              (click)="pagePrecedente()" [disabled]="currentPage === 0">Précédent</button>
+      <span style="align-self: center; font-size: 0.9rem;">Page {{currentPage + 1}} sur {{page.totalPages}}</span>
+      <button class="btn-primary" style="background: white; color: var(--boa-text); border: 1px solid var(--boa-border);"
+              (click)="pageSuivante(page.totalPages)" [disabled]="currentPage === page.totalPages - 1">Suivant</button>
+    </div>
+  </div>
+} @else {
+  <div style="padding: 40px; text-align: center; color: var(--boa-text-secondary);">
+    Chargement de la base PPE en cours...
+  </div>
+}
+
+<!-- Modal Formulaire Complet -->
+@if (isEditing) {
+  <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+    <div class="content-card" style="width: 600px; padding: 30px; margin: 0; max-height: 90vh; overflow-y: auto;">
+      <h3 style="margin-top: 0; border-bottom: 2px solid var(--boa-blue); padding-bottom: 10px;">
+        {{currentPpe.id ? 'Modifier' : 'Nouveau'}} Client PPE
+      </h3>
+      <form (ngSubmit)="enregistrerPpe()">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; font-size: 0.8rem; margin-bottom: 5px; font-weight: 600;">Nom</label>
+            <input type="text" [(ngModel)]="currentPpe.nom" name="nom" required style="width: 100%; padding: 10px; border: 1px solid var(--boa-border); border-radius: 4px;">
+          </div>
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; font-size: 0.8rem; margin-bottom: 5px; font-weight: 600;">Prénom</label>
+            <input type="text" [(ngModel)]="currentPpe.prenom" name="prenom" required style="width: 100%; padding: 10px; border: 1px solid var(--boa-border); border-radius: 4px;">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; font-size: 0.8rem; margin-bottom: 5px; font-weight: 600;">Date de naissance</label>
+            <input type="date" [(ngModel)]="currentPpe.dateDeNaissance" name="dateNaissance" style="width: 100%; padding: 10px; border: 1px solid var(--boa-border); border-radius: 4px;">
+          </div>
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; font-size: 0.8rem; margin-bottom: 5px; font-weight: 600;">Pays </label>
+            <select [(ngModel)]="currentPpe.pays" name="pays" required style="width: 100%; padding: 10px; border: 1px solid var(--boa-border); border-radius: 4px; background: white;">
+              <option value="">Sélectionnez un pays</option>
+              @for (c of countries; track c.code) {
+                <option [value]="c.code + ' - ' + c.name">{{c.code}} - {{c.name}}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; font-size: 0.8rem; margin-bottom: 5px; font-weight: 600;">Fonction / Profession</label>
+          <input type="text" [(ngModel)]="currentPpe.fonction" name="fonction" required style="width: 100%; padding: 10px; border: 1px solid var(--boa-border); border-radius: 4px;" placeholder="Ex: Directeur Général, Ministre...">
+        </div>
+
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; font-size: 0.8rem; margin-bottom: 5px; font-weight: 600;">Motif d'intégration</label>
+          <textarea [(ngModel)]="currentPpe.motif" name="motif" rows="2" style="width: 100%; padding: 10px; border: 1px solid var(--boa-border); border-radius: 4px;" placeholder="Expliquez pourquoi ce client est intégré au portail..."></textarea>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; font-size: 0.8rem; margin-bottom: 5px; font-weight: 600;">Commentaire</label>
+          <textarea [(ngModel)]="currentPpe.commentaire" name="commentaire" rows="2" style="width: 100%; padding: 10px; border: 1px solid var(--boa-border); border-radius: 4px;" placeholder="Commentaires additionnels..."></textarea>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 15px; margin-top: 30px;">
+          <button type="button" (click)="annulerEdition()" style="background: none; border: 1px solid #ccc; padding: 10px 25px; border-radius: 4px; cursor: pointer;">Annuler</button>
+          <button type="submit" class="btn-primary" style="padding: 10px 25px;">Soumettre la demande</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
