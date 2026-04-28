@@ -12,7 +12,7 @@ import { Utilisateur } from './models/utilisateur.model';
   styleUrl: './app.component.css'
 })
 export class AppComponent implements OnInit {
-  user?: Utilisateur;
+  user: Utilisateur | null = null;
 
   constructor(private authService: AuthService) {}
 
@@ -21,7 +21,7 @@ export class AppComponent implements OnInit {
   }
 
   get initials(): string {
-    if (!this.user) return '';
+    if (!this.user || !this.user.prenom || !this.user.nom) return '';
     return (this.user.prenom[0] + this.user.nom[0]).toUpperCase();
   }
 }

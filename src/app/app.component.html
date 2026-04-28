@@ -6,26 +6,38 @@
     </div>
 
     @if (user) {
-      <!-- SECTION COMMUNE / COMPLIANCE -->
-      <div class="sidebar-header">MENU PRINCIPAL</div>
-      <nav>
-        <div class="sidebar-menu-item" routerLink="/ppes" routerLinkActive="active">
-          <span>👤</span> Base PPE
-        </div>
-        <div class="sidebar-menu-item" routerLink="/susp-pm" routerLinkActive="active">
-          <span>🏢</span> Suspects (PM)
-        </div>
-        <div class="sidebar-menu-item" routerLink="/susp-pp" routerLinkActive="active">
-          <span>👤</span> Suspects (PP)
-        </div>
-
-        @if (user.role === 'USER_CENTRAL' || user.role === 'ADMIN') {
-          <div class="sidebar-header" style="margin-top: 20px;">ADMINISTRATION</div>
-          <div class="sidebar-menu-item" routerLink="/tasks" routerLinkActive="active">
-            <span>📋</span> Validations
+      <!-- MENU ADMINISTRATEUR EXCLUSIF -->
+      @if (user.role === 'ADMIN') {
+        <div class="sidebar-header">ADMINISTRATION</div>
+        <nav>
+          <div class="sidebar-menu-item" routerLink="/users" routerLinkActive="active">
+            <span>🔐</span> Habilitations
           </div>
-        }
-      </nav>
+        </nav>
+      }
+
+      <!-- MENU OPÉRATIONNEL (Pour CENTRAL et LOCAL) -->
+      @else {
+        <div class="sidebar-header">MENU PRINCIPAL</div>
+        <nav>
+          <div class="sidebar-menu-item" routerLink="/ppes" routerLinkActive="active">
+            <span>👤</span> Base PPE
+          </div>
+          <div class="sidebar-menu-item" routerLink="/susp-pm" routerLinkActive="active">
+            <span>🏢</span> Suspects (PM)
+          </div>
+          <div class="sidebar-menu-item" routerLink="/susp-pp" routerLinkActive="active">
+            <span>👤</span> Suspects (PP)
+          </div>
+
+          @if (user.role === 'USER_CENTRAL') {
+            <div class="sidebar-header" style="margin-top: 20px;">VALIDATIONS</div>
+            <div class="sidebar-menu-item" routerLink="/tasks" routerLinkActive="active">
+              <span>📋</span> File d'attente
+            </div>
+          }
+        </nav>
+      }
     }
 
     <div style="margin-top: auto; padding: 20px; color: #a0aec0; cursor: pointer; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.8rem;">
@@ -63,7 +75,7 @@
 
     <footer style="padding: 15px 30px; border-top: 1px solid #dee2e6; display: flex; justify-content: space-between; font-size: 0.75rem; color: #6c757d; background: white;">
       <span>BMCE BANK © 2026 Portail PCS.</span>
-      <span>Réalisé par Burafric Information</span>
+      <span>Réalisé par Eurafric Information</span>
     </footer>
   </main>
 </div>

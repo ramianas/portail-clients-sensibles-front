@@ -48,32 +48,36 @@ export class TacheListComponent implements OnInit {
   }
 
   confirmerValidation(): void {
-    if (!this.tacheSelectionnee) return;
+    if (!this.tacheSelectionnee || !this.tacheSelectionnee.id) return;
     
-    const validateurId = this.authService.getCurrentUserValue().id;
-    this.tacheService.validerTache(this.tacheSelectionnee.id, validateurId).subscribe({
-      next: () => {
-        this.chargerTaches();
-        this.fermerDecision();
-      },
-      error: (err) => alert('Erreur lors de la validation')
-    });
+    const user = this.authService.getCurrentUserValue();
+    if (user && user.id) {
+      this.tacheService.validerTache(this.tacheSelectionnee.id, user.id).subscribe({
+        next: () => {
+          this.chargerTaches();
+          this.fermerDecision();
+        },
+        error: (err) => alert('Erreur lors de la validation')
+      });
+    }
   }
 
   confirmerRejet(): void {
-    if (!this.tacheSelectionnee || !this.commentaireRejet) {
+    if (!this.tacheSelectionnee || !this.tacheSelectionnee.id || !this.commentaireRejet) {
       alert('Veuillez saisir un motif de rejet.');
       return;
     }
     
-    const validateurId = this.authService.getCurrentUserValue().id;
-    this.tacheService.rejeterTache(this.tacheSelectionnee.id, validateurId, this.commentaireRejet).subscribe({
-      next: () => {
-        this.chargerTaches();
-        this.fermerDecision();
-      },
-      error: (err) => alert('Erreur lors du rejet')
-    });
+    const user = this.authService.getCurrentUserValue();
+    if (user && user.id) {
+      this.tacheService.rejeterTache(this.tacheSelectionnee.id, user.id, this.commentaireRejet).subscribe({
+        next: () => {
+          this.chargerTaches();
+          this.fermerDecision();
+        },
+        error: (err) => alert('Erreur lors du rejet')
+      });
+    }
   }
 
   getLabelAction(type: string): string {

@@ -1,0 +1,120 @@
+<div class="table-header-section">
+  <h2 style="margin: 0; font-weight: 600;">Gestion des Habilitations</h2>
+  <button class="btn-primary" (click)="isEditing = true">Ajouter un Utilisateur</button>
+</div>
+
+@if (users$ | async; as users) {
+  <div class="content-card">
+    <table>
+      <thead>
+        <tr>
+          <th>Nom / Prénom ↕</th>
+          <th>Email ↕</th>
+          <th>Rôle ↕</th>
+          <th>Entité ↕</th>
+          <th>Pays ↕</th>
+          <th>Téléphone ↕</th>
+          <th style="text-align: center;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (user of users; track user.id) {
+          <tr>
+            <td style="font-weight: 500;">{{user.nom}} {{user.prenom}}</td>
+            <td style="font-size: 0.85rem;">{{user.email}}</td>
+            <td>
+              <span class="badge" [ngClass]="{
+                  'badge-pbf': user.role === 'ADMIN',
+                  'badge-pending': user.role === 'USER_CENTRAL',
+                  'badge-entity': user.role === 'USER_LOCAL'
+                }">
+                {{user.role}}
+              </span>
+            </td>
+            <td>{{user.entite || 'N/A'}}</td>
+            <td>{{user.pays || 'N/A'}}</td>
+            <td>{{user.telephone || 'N/A'}}</td>
+            <td style="text-align: center;">
+              <div style="display: flex; justify-content: center; gap: 10px;">
+                <button style="border: none; background: none; color: #0057b8; cursor: pointer; font-size: 1.1rem;" (click)="editerUser(user)">✏️</button>
+                <button style="border: none; background: none; color: #dc3545; cursor: pointer; font-size: 1.1rem;" (click)="supprimerUser(user.id)">🗑️</button>
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="7" style="text-align: center; padding: 20px;">Aucun utilisateur trouvé.</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+} @else {
+  <div style="padding: 40px; text-align: center; color: var(--boa-text-secondary);">Chargement des habilitations...</div>
+}
+
+<!-- Modal Formulaire Utilisateur -->
+@if (isEditing) {
+  <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+    <div class="content-card" style="width: 650px; padding: 30px; margin: 0; max-height: 90vh; overflow-y: auto;">
+      <h3 style="margin-top: 0; border-bottom: 2px solid var(--boa-blue); padding-bottom: 10px;">
+        {{currentUser.id ? 'Modifier' : 'Nouvel'}} Utilisateur
+      </h3>
+      <form (ngSubmit)="enregistrerUser()">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; font-size: 0.8rem; margin-bottom: 5px; font-weight: 600;">Nom</label>
+            <input type="text" [(ngModel)]="currentUser.nom" name="nom" required style="width: 100%; padding: 10px; border: 1px solid var(--boa-border); border-radius: 4px;">
+          </div>
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; font-size: 0.8rem; margin-bottom: 5px; font-weight: 600;">Prénom</label>
+            <input type="text" [(ngModel)]="currentUser.prenom" name="prenom" required style="width: 100%; padding: 10px; border: 1px solid var(--boa-border); border-radius: 4px;">
+          </div>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; font-size: 0.8rem; margin-bottom: 5px; font-weight: 600;">Adresse Email</label>
+          <input type="email" [(ngModel)]="currentUser.email" name="email" required style="width: 100%; padding: 10px; border: 1px solid var(--boa-border); border-radius: 4px;" placeholder="Ex: agent@boa.com">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; font-size: 0.8rem; margin-bottom: 5px; font-weight: 600;">Rôle</label>
+            <select [(ngModel)]="currentUser.role" name="role" required style="width: 100%; padding: 10px; border: 1px solid var(--boa-border); border-radius: 4px; background: white;">
+              @for (role of roles; track role) {
+                <option [value]="role">{{role}}</option>
+              }
+            </select>
+          </div>
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; font-size: 0.8rem; margin-bottom: 5px; font-weight: 600;">Téléphone</label>
+            <input type="text" [(ngModel)]="currentUser.telephone" name="telephone" style="width: 100%; padding: 10px; border: 1px solid var(--boa-border); border-radius: 4px;">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; font-size: 0.8rem; margin-bottom: 5px; font-weight: 600;">Entité / Agence</label>
+            <input type="text" [(ngModel)]="currentUser.entite" name="entite" required style="width: 100%; padding: 10px; border: 1px solid var(--boa-border); border-radius: 4px;" placeholder="Ex: Agence Principale">
+          </div>
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; font-size: 0.8rem; margin-bottom: 5px; font-weight: 600;">Pays</label>
+            <select [(ngModel)]="currentUser.pays" name="pays" required style="width: 100%; padding: 10px; border: 1px solid var(--boa-border); border-radius: 4px; background: white;">
+              <option value="">Sélectionnez un pays</option>
+              @for (c of countries; track c.code) {
+                <option [value]="c.code + ' - ' + c.name">{{c.code}} - {{c.name}}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-top: 20px; padding: 15px; background: #fff3e0; color: #ef6c00; border-radius: 6px; font-size: 0.85rem;">
+          ℹ️ Lors de la création, un email d'initialisation sera automatiquement envoyé à l'utilisateur via Keycloak.
+        </div>
+        
+        <div style="display: flex; justify-content: flex-end; gap: 15px; margin-top: 30px;">
+          <button type="button" (click)="annulerEdition()" style="background: none; border: 1px solid #ccc; padding: 10px 25px; border-radius: 4px; cursor: pointer;">Annuler</button>
+          <button type="submit" class="btn-primary" style="padding: 10px 25px;">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

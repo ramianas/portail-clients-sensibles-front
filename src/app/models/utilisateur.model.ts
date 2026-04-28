@@ -1,14 +1,18 @@
 export enum RoleEnum {
-  ADMIN = 'ADMIN',
-  USER_CENTRAL = 'USER_CENTRAL',
-  USER_LOCAL = 'USER_LOCAL'
+    USER_LOCAL = 'USER_LOCAL',
+    USER_CENTRAL = 'USER_CENTRAL',
+    ADMIN = 'ADMIN'
 }
 
 export interface Utilisateur {
-  id: number;
-  nom: string;
-  prenom: string;
-  email: string;
-  role: RoleEnum;
-  entite?: string;
+    id?: number;
+    nom: string;
+    prenom: string;
+    email: string;
+    telephone?: string;
+    entite?: string;
+    pays?: string;
+    role: RoleEnum;
+    dateCreation?: string;
+    dateModification?: string;
 }
